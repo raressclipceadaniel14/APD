@@ -16,7 +16,7 @@ class Program
         //ProcessImageSequentially(originalImage, outputFilePath);
         ProcessImageInParallelAsync(originalImage, outputFilePath);
         sequentialStopwatch.Stop();
-        Console.WriteLine("Sequential processing time: " + sequentialStopwatch.ElapsedMilliseconds + " ms");
+        Console.WriteLine("Processing time: " + sequentialStopwatch.ElapsedMilliseconds + " ms");
     }
 
     static void ProcessImageSequentially(Bitmap original, string outputFilePath)
