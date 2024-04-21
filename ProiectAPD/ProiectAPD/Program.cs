@@ -7,13 +7,14 @@ class Program
 {
     static void Main()
     {
-        string imagePath = "D:\\Facultate\\Proiect APD\\ProiectAPD\\ProiectAPD\\input.jpg";
+        string imagePath = "D:\\Facultate\\APD\\Proiect Curs\\ProiectAPD\\ProiectAPD\\input.jpg";
 
         Bitmap originalImage = new Bitmap(imagePath);
 
         Stopwatch sequentialStopwatch = Stopwatch.StartNew();
-        string outputFilePath = "D:\\Facultate\\Proiect APD\\ProiectAPD\\ProiectAPD\\output.jpg";
-        ProcessImageSequentially(originalImage, outputFilePath);
+        string outputFilePath = "D:\\Facultate\\APD\\Proiect Curs\\ProiectAPD\\ProiectAPD\\output.jpg";
+        //ProcessImageSequentially(originalImage, outputFilePath);
+        ProcessImageInParallelAsync(originalImage, outputFilePath);
         sequentialStopwatch.Stop();
         Console.WriteLine("Sequential processing time: " + sequentialStopwatch.ElapsedMilliseconds + " ms");
     }
@@ -51,4 +52,112 @@ class Program
         // Save the processed image
         result.Save(outputFilePath);
     }
+
+    static async Task ProcessImageInParallelAsync(Bitmap original, string outputFilePath)
+    {
+        // Create a new bitmap for the result
+        Bitmap result = new Bitmap(200, 200);
+
+        // Convert to black and white asynchronously
+        Bitmap bwImage = await ConvertToBlackAndWhiteAsync(original);
+
+        // Resize asynchronously
+        Bitmap resizedImage = await ResizeAsync(bwImage);
+
+        // Convert blue to red asynchronously
+        await ConvertBlueToRedAsync(resizedImage);
+
+        // Save the processed image
+        resizedImage.Save(outputFilePath);
+        Console.WriteLine("Processed image saved to: " + outputFilePath);
+    }
+
+    static Task<Bitmap> ConvertToBlackAndWhiteAsync(Bitmap original)
+    {
+        return Task.Run(() =>
+        {
+            Bitmap bwImage = new Bitmap(original.Width, original.Height);
+            object lockObj = new object(); // Lock object
+
+            Parallel.For(0, original.Width, x =>
+            {
+                Parallel.For(0, original.Height, y =>
+                {
+                    Color pixelColor;
+                    lock (lockObj)
+                    {
+                        pixelColor = original.GetPixel(x, y);
+                    }
+
+                    int avgColor = (pixelColor.R + pixelColor.G + pixelColor.B) / 3;
+                    Color bwColor = Color.FromArgb(avgColor, avgColor, avgColor);
+
+                    lock (lockObj)
+                    {
+                        bwImage.SetPixel(x, y, bwColor);
+                    }
+                });
+            });
+
+            return bwImage;
+        });
+    }
+
+    static Task<Bitmap> ResizeAsync(Bitmap original)
+    {
+        return Task.Run(() =>
+        {
+            Bitmap resizedImage = new Bitmap(200, 200);
+            object lockObj = new object(); // Lock object
+
+            Parallel.For(0, resizedImage.Width, x =>
+            {
+                Parallel.For(0, resizedImage.Height, y =>
+                {
+                    int origX, origY;
+                    Color pixelColor;
+                    lock (lockObj)
+                    {
+                        origX = (int)((double)x / resizedImage.Width * original.Width);
+                        origY = (int)((double)y / resizedImage.Height * original.Height);
+                        pixelColor = original.GetPixel(origX, origY);
+                    }
+                    lock (lockObj)
+                    {
+                        resizedImage.SetPixel(x, y, pixelColor);
+                    }
+                });
+            });
+
+            return resizedImage;
+        });
+    }
+
+    static Task ConvertBlueToRedAsync(Bitmap image)
+    {
+        return Task.Run(() =>
+        {
+            object lockObj = new object(); // Lock object
+
+            Parallel.For(0, image.Width, x =>
+            {
+                Parallel.For(0, image.Height, y =>
+                {
+                    Color pixelColor;
+                    lock (lockObj)
+                    {
+                        pixelColor = image.GetPixel(x, y);
+                    }
+                    if (pixelColor.B > 0)
+                    {
+                        lock (lockObj)
+                        {
+                            image.SetPixel(x, y, Color.FromArgb(pixelColor.R, pixelColor.G, 255));
+                        }
+                    }
+                });
+            });
+        });
+    }
+
 }
