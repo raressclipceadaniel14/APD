@@ -1,22 +1,21 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Drawing;
-using System.Linq;
 using System.Threading.Tasks;
 
 class Program
 {
     static void Main()
     {
-        string imagePath = "D:\\Facultate\\APD\\Proiect Curs\\ProiectAPD\\ProiectAPD\\input.jpg";
+        string imagePath = "D:\\Facultate\\APD\\Proiect Curs\\ProiectAPD\\ProiectAPD\\input15000x15000.jpg";
 
         Bitmap originalImage = new Bitmap(imagePath);
 
         Stopwatch sequentialStopwatch = Stopwatch.StartNew();
-        string outputFilePath = "D:\\Facultate\\APD\\Proiect Curs\\ProiectAPD\\ProiectAPD\\output.jpg";
+        string outputFilePath = "D:\\Facultate\\APD\\Proiect Curs\\ProiectAPD\\ProiectAPD\\output15000x15000.jpg";
+        ProcessImageSequentially(originalImage, outputFilePath);
         //ProcessImageSequentially(originalImage, outputFilePath);
-        //ProcessImageInParallelAsync(originalImage, outputFilePath).Wait();
-        ProcessImageWithPLINQ(originalImage, outputFilePath);
+        //ProcessImageInParallelAsync(originalImage, outputFilePath);
         sequentialStopwatch.Stop();
         Console.WriteLine("Processing time: " + sequentialStopwatch.ElapsedMilliseconds + " ms");
     }
@@ -311,4 +310,5 @@ class Program
             image.SetPixel(p.x, p.y, p.pixelColor);
         }
     }
+
 }
